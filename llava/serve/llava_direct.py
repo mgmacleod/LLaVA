@@ -50,7 +50,7 @@ class LlavaDirect:
         max_new_tokens=512,
         load_8bit=True,
         load_4bit=False,
-        debug=True,
+        debug=False,
     ):
         # Model
         disable_torch_init()
@@ -110,12 +110,14 @@ class LlavaDirect:
         image = self.load_image(
             "/home/mgm/development/ai/llm/LLaVA/llava/serve/examples/waterview.jpg"
         )
-        self.process_image(
+        output = self.process_image(
             image,
             'what do you see here? (Please do not start with "The image features..."; just describe what you see.)',
         )
 
-        return
+        # process output and remove leading string "The image features " and remode trailing string "</s>"
+        output = output.replace("The image features ", "").replace("</s>", "")
+        return output
 
     def load_image(self, image_file):
         if image_file.startswith("http://") or image_file.startswith("https://"):
@@ -174,10 +176,6 @@ class LlavaDirect:
         streamer = TextStreamer(
             self.tokenizer, skip_prompt=True, skip_special_tokens=True
         )
-
-        # streamer = CollectingStreamer(
-        #     self.tokenizer, skip_prompt=True, skip_special_tokens=True
-        # )
 
         with torch.inference_mode():
             output_ids = self.model.generate(
