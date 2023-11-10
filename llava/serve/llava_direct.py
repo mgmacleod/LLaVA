@@ -42,7 +42,7 @@ class CollectingStreamer(TextStreamer):
 class LlavaDirect:
     def __init__(
         self,
-        model_path="liuhaotian/llava-v1.5-13b",
+        model_path=None,
         model_base=None,
         device="cuda",
         conv_mode=None,
@@ -71,23 +71,17 @@ class LlavaDirect:
         self.max_new_tokens = max_new_tokens
         self.streamer = None
 
-        self.load_model(model_path, model_base, load_8bit, load_4bit, device)
+        if model_path is not None:
+            self.load_model(model_path, model_base, load_8bit, load_4bit, device)
 
-        if "llama-2" in self.model_name.lower():
-            self.conv_mode = "llava_llama_2"
-        elif "v1" in self.model_name.lower():
-            self.conv_mode = "llava_v1"
-        elif "mpt" in self.model_name.lower():
-            self.conv_mode = "mpt"
-        else:
-            self.conv_mode = "llava_v0"
-
-        self.conv = conv_templates[self.conv_mode].copy()
-        if "mpt" in self.model_name.lower():
-            self.roles = ("user", "assistant")
-            self.roles = self.conv.roles
-
-    def load_model(self, model_path, model_base, load_8bit, load_4bit, device):
+    def load_model(
+        self,
+        model_path,
+        model_base=None,
+        load_8bit=True,
+        load_4bit=False,
+        device="cuda",
+    ):
         self.model_name = get_model_name_from_path(model_path)
         (
             self.tokenizer,
@@ -103,10 +97,21 @@ class LlavaDirect:
             device=device,
         )
 
-    def get_streamer(self):
-        return self.streamer
+        if "llama-2" in self.model_name.lower():
+            self.conv_mode = "llava_llama_2"
+        elif "v1" in self.model_name.lower():
+            self.conv_mode = "llava_v1"
+        elif "mpt" in self.model_name.lower():
+            self.conv_mode = "mpt"
+        else:
+            self.conv_mode = "llava_v0"
 
-    def run(self):
+        self.conv = conv_templates[self.conv_mode].copy()
+        if "mpt" in self.model_name.lower():
+            self.roles = ("user", "assistant")
+            self.roles = self.conv.roles
+
+    def test(self):
         image = self.load_image(
             "/home/mgm/development/ai/llm/LLaVA/llava/serve/examples/waterview.jpg"
         )
