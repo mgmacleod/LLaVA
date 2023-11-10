@@ -22,6 +22,23 @@ from llava.model.builder import load_pretrained_model
 from llava.utils import disable_torch_init
 
 
+class CollectingStreamer(TextStreamer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.collected_outputs = []
+
+    def decode(self, token_ids):
+        output = super().decode(token_ids)
+        self.collected_outputs.append(output)
+        return output
+
+    def get_collected_outputs(self):
+        return self.collected_outputs
+
+    def get_concatenated_outputs(self):
+        return "\n".join(self.collected_outputs)
+
+
 class LlavaDirect:
     def __init__(
         self,
@@ -33,7 +50,7 @@ class LlavaDirect:
         max_new_tokens=512,
         load_8bit=True,
         load_4bit=False,
-        debug=False,
+        debug=True,
     ):
         # Model
         disable_torch_init()
@@ -52,6 +69,7 @@ class LlavaDirect:
         self.model_name = None
         self.temperature = temperature
         self.max_new_tokens = max_new_tokens
+        self.streamer = None
 
         self.load_model(model_path, model_base, load_8bit, load_4bit, device)
 
@@ -85,9 +103,17 @@ class LlavaDirect:
             device=device,
         )
 
+    def get_streamer(self):
+        return self.streamer
+
     def run(self):
-        image = self.load_image("https://llava-vl.github.io/static/images/view.jpg")
-        self.process_image(image, "what do you see here?")
+        image = self.load_image(
+            "/home/mgm/development/ai/llm/LLaVA/llava/serve/examples/waterview.jpg"
+        )
+        self.process_image(
+            image,
+            'what do you see here? (Please do not start with "The image features..."; just describe what you see.)',
+        )
 
         return
 
@@ -149,6 +175,10 @@ class LlavaDirect:
             self.tokenizer, skip_prompt=True, skip_special_tokens=True
         )
 
+        # streamer = CollectingStreamer(
+        #     self.tokenizer, skip_prompt=True, skip_special_tokens=True
+        # )
+
         with torch.inference_mode():
             output_ids = self.model.generate(
                 input_ids,
@@ -166,3 +196,5 @@ class LlavaDirect:
 
         if self.debug:
             print("\n", {"prompt": prompt, "outputs": outputs}, "\n")
+
+        return outputs
