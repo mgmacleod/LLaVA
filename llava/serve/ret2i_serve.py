@@ -24,12 +24,8 @@ def run_experiment(
     steps,
     negative_prompt,
 ):
-    # label = f"{name}x{iterations}"
-
-    # make label from sd_prompt and ll_prompt in kebab case and remove a trailing '?' from ll_prompt if it exists
-
+    # make label from sd_prompt in kebab case
     label = f"{sd_prompt.replace(' ', '-').lower()}x{iterations}"
-
     working_dir = sd.create_directory(image_dir, label)
 
     # Configure logging

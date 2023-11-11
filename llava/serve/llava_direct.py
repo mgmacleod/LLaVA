@@ -127,14 +127,6 @@ class LlavaDirect:
         output = output.replace("The image features ", "").replace("</s>", "")
         return output
 
-    # def load_image(self, image_file):
-    #     if image_file.startswith("http://") or image_file.startswith("https://"):
-    #         response = requests.get(image_file)
-    #         image = Image.open(BytesIO(response.content)).convert("RGB")
-    #     else:
-    #         image = Image.open(image_file).convert("RGB")
-    #     return image
-
     def process_image(self, image_file: str, prompt: str) -> str:
         if image_file.startswith("http://") or image_file.startswith("https://"):
             response = requests.get(image_file)
