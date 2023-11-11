@@ -23,6 +23,7 @@ def run_experiment(
     ll_prompt,
     steps,
     negative_prompt,
+    styles: List,
 ):
     # make label from sd_prompt in kebab case
     label = f"{sd_prompt.replace(' ', '-').lower()}x{iterations}"
@@ -38,8 +39,19 @@ def run_experiment(
     handler.setFormatter(formatter)
     logger.addHandler(handler)
 
-    msg = f"[Running experiment with {iterations} iterations, {steps} steps of stable diffusion stably diffusing, and SD negative prompt '{negative_prompt}', starting with prompt '{sd_prompt}' and LLaVA prompt '{ll_prompt}']"
-    logger.info(msg)
+    # log json of experiment parameters: iterations, sd_prompt, ll_prompt, steps, negative_prompt, styles
+    logger.info(
+        json.dumps(
+            {
+                "iterations": iterations,
+                "sd_prompt": sd_prompt,
+                "ll_prompt": ll_prompt,
+                "steps": steps,
+                "negative_prompt": negative_prompt,
+                "styles": styles,
+            }
+        )
+    )
 
     image_dict = {}
 
@@ -74,6 +86,7 @@ async def handle_run_experiment(request: Request):
             data["ll_prompt"],
             data["steps"],
             data["negative_prompt"],
+            data["styles"],
         ),
     ).start()
     return Response(status_code=200, content="Running experiment...")
