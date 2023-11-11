@@ -48,6 +48,7 @@ class StableDiffusionDirect:
         dir_name = f"{path}/{date_time}_{label}x{self.iterations}"
         self.image_dir = dir_name
         os.makedirs(dir_name, exist_ok=True)
+        return dir_name
 
 
 def main(args):
