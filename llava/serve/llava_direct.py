@@ -97,6 +97,9 @@ class LlavaDirect:
             device=device,
         )
 
+        self.reset_conversation()
+
+    def reset_conversation(self):
         if "llama-2" in self.model_name.lower():
             self.conv_mode = "llava_llama_2"
         elif "v1" in self.model_name.lower():
@@ -138,6 +141,8 @@ class LlavaDirect:
             image = Image.open(BytesIO(response.content)).convert("RGB")
         else:
             image = Image.open(image_file).convert("RGB")
+
+        self.reset_conversation()
 
         # Similar operation in model_worker.py
         image_tensor = process_images([image], self.image_processor, self.model.config)
