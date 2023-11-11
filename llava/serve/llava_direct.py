@@ -50,7 +50,7 @@ class LlavaDirect:
         max_new_tokens=512,
         load_8bit=True,
         load_4bit=False,
-        debug=True,
+        debug=False,
     ):
         # Model
         disable_torch_init()
@@ -211,4 +211,6 @@ class LlavaDirect:
         if self.debug:
             print("\n", {"prompt": prompt, "outputs": outputs}, "\n")
 
+        # process output and remove leading string "The image features " and remode trailing string "</s>"
+        outputs = outputs.replace("The image features ", "").replace("</s>", "")
         return outputs

@@ -10,10 +10,11 @@ from PIL import Image
 
 
 class StableDiffusionDirect:
-    def __init__(self, host, port, steps=5):
+    def __init__(self, host, port, iterations, steps=5):
         self.image_dir = None
         self.url = f"http://{host}:{port}"
         self.steps = steps
+        self.iterations = iterations
 
     def generate_image(self, prompt, iteration):
         if self.image_dir is None:
@@ -24,7 +25,7 @@ class StableDiffusionDirect:
             print("Please specify an iteration.")
             return
 
-        payload = {"prompt": prompt, "steps": self.steps}
+        payload = {"prompt": prompt, "steps": self.steps, "width": 768, "height": 768}
 
         response = requests.post(url=f"{self.url}/sdapi/v1/txt2img", json=payload)
 
@@ -44,7 +45,7 @@ class StableDiffusionDirect:
         date_time = now.strftime("%Y-%m-%d%H_%M_%S")
 
         # Append suffix
-        dir_name = f"{path}/{date_time}_{label}"
+        dir_name = f"{path}/{date_time}_{label}x{self.iterations}"
         self.image_dir = dir_name
         os.makedirs(dir_name, exist_ok=True)
 
