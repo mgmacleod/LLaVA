@@ -10,7 +10,7 @@ from PIL import Image
 
 
 class StableDiffusionDirect:
-    def __init__(self, host, port, iterations, steps=5):
+    def __init__(self, host, port, iterations, steps=50):
         self.image_dir = None
         self.url = f"http://{host}:{port}"
         self.steps = steps
