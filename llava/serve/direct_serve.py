@@ -1,5 +1,6 @@
 import argparse
 import json
+import logging
 import threading
 import time
 from typing import List, Union
@@ -13,11 +14,49 @@ from fastapi.responses import Response
 from llava.serve.direct_ret2i import StableDiffusionDirect
 from llava.serve.llava_direct import LlavaDirect
 
+# def run_experiment(
+#     ld: LlavaDirect, sd: StableDiffusionDirect, iterations, sd_prompt, ll_prompt, name
+# ):
+#     working_dir = sd.create_directory(image_dir, name)
+
+#     image_dict = {}
+
+#     for i in range(iterations):
+#         filename = sd.generate_image(sd_prompt, i)
+#         image_dict[i] = (sd_prompt, filename)
+#         next_prompt = ld.process_image(filename, ll_prompt)
+#         sd_prompt = next_prompt
+#         time.sleep(3)
+
+#         # Write the current state of image_dict to a JSON file
+#         with open(f"{working_dir}/log_{i}.json", "w") as f:
+#             json.dump(image_dict[i], f)
+
+#     data = []
+#     for i in range(iterations):
+#         sd_prompt, filename = image_dict[i]
+#         data.append({"Iteration": i, "prompt": sd_prompt, "filename": filename})
+
+#     with open(f"{working_dir}/log.json", "w") as f:
+#         json.dump(data, f)
+
+#     return
+
 
 def run_experiment(
     ld: LlavaDirect, sd: StableDiffusionDirect, iterations, sd_prompt, ll_prompt, name
 ):
     working_dir = sd.create_directory(image_dir, name)
+
+    # Configure logging
+    logger = logging.getLogger("experiment_logger")
+    logger.setLevel(logging.INFO)
+    handler = logging.FileHandler(f"{working_dir}/log.txt")
+    formatter = logging.Formatter(
+        "%(message)s"
+    )  # Log only the message, which will be JSON
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
 
     image_dict = {}
 
@@ -28,23 +67,8 @@ def run_experiment(
         sd_prompt = next_prompt
         time.sleep(3)
 
-    # for i in range(iterations):
-    #     sd_prompt, filename = image_dict[i]
-    #     print(f"Iteration {i}: prompt = {sd_prompt} -> {filename}")
-
-    # print each (sd_prompt, filename) in image_dict to a log file inside working_dir:
-    # with open(f"{working_dir}/log.txt", "w") as f:
-    #     for i in range(iterations):
-    #         sd_prompt, filename = image_dict[i]
-    #         f.write(f"Iteration {i}: prompt = {sd_prompt} -> {filename}\n")
-
-    data = []
-    for i in range(iterations):
-        sd_prompt, filename = image_dict[i]
-        data.append({"Iteration": i, "prompt": sd_prompt, "filename": filename})
-
-    with open(f"{working_dir}/log.json", "w") as f:
-        json.dump(data, f)
+        # Log the current state of image_dict
+        logger.info(json.dumps(image_dict[i]))
 
     return
 
