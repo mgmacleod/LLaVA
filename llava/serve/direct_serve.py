@@ -21,11 +21,15 @@ def run_experiment(
     iterations,
     sd_prompt,
     ll_prompt,
-    name,
     steps,
     negative_prompt,
 ):
-    label = f"{name}x{iterations}"
+    # label = f"{name}x{iterations}"
+
+    # make label from sd_prompt and ll_prompt in kebab case and remove a trailing '?' from ll_prompt if it exists
+
+    label = f"{sd_prompt.replace(' ', '-').lower()}x{iterations}"
+
     working_dir = sd.create_directory(image_dir, label)
 
     # Configure logging
@@ -38,7 +42,7 @@ def run_experiment(
     handler.setFormatter(formatter)
     logger.addHandler(handler)
 
-    msg = f"[Running experiment '{name}' with {iterations} iterations, {steps} steps of stable diffusion stably diffusing, and negative prompt '{negative_prompt}', starting with prompt '{sd_prompt}']"
+    msg = f"[Running experiment with {iterations} iterations, {steps} steps of stable diffusion stably diffusing, and SD negative prompt '{negative_prompt}', starting with prompt '{sd_prompt}' and LLaVA prompt '{ll_prompt}']"
     logger.info(msg)
 
     image_dict = {}
@@ -72,7 +76,6 @@ async def handle_run_experiment(request: Request):
             data["iterations"],
             data["sd_prompt"],
             data["ll_prompt"],
-            data["name"],
             data["steps"],
             data["negative_prompt"],
         ),
