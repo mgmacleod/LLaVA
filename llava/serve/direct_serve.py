@@ -44,9 +44,17 @@ from llava.serve.llava_direct import LlavaDirect
 
 
 def run_experiment(
-    ld: LlavaDirect, sd: StableDiffusionDirect, iterations, sd_prompt, ll_prompt, name
+    ld: LlavaDirect,
+    sd: StableDiffusionDirect,
+    iterations,
+    sd_prompt,
+    ll_prompt,
+    name,
+    steps,
+    negative_prompt,
 ):
-    working_dir = sd.create_directory(image_dir, name)
+    label = f"{name}x{iterations}"
+    working_dir = sd.create_directory(image_dir, label)
 
     # Configure logging
     logger = logging.getLogger("experiment_logger")
@@ -58,10 +66,15 @@ def run_experiment(
     handler.setFormatter(formatter)
     logger.addHandler(handler)
 
+    msg = f"Running experiment {name} with {iterations} iterations, {steps} steps of stable diffusion stably diffusing, and negative prompt {negative_prompt}, starting with prompt {sd_prompt}"
+    logger.info(msg)
+
     image_dict = {}
 
     for i in range(iterations):
-        filename = sd.generate_image(sd_prompt, i)
+        filename = sd.generate_image(
+            sd_prompt, i, steps=steps, negative_prompt=negative_prompt
+        )
         image_dict[i] = (sd_prompt, filename)
         next_prompt = ld.process_image(filename, ll_prompt)
         sd_prompt = next_prompt
@@ -88,7 +101,8 @@ async def handle_run_experiment(request: Request):
             data["sd_prompt"],
             data["ll_prompt"],
             data["name"],
-            # data["image_dir"],
+            data["steps"],
+            data["negative_prompt"],
         ),
     ).start()
     return Response(status_code=200, content="Running experiment...")
@@ -102,7 +116,6 @@ if __name__ == "__main__":
     parser.add_argument("--host", type=str, default="0.0.0.0")
     parser.add_argument("--port", type=int, default=21001)
     parser.add_argument("--image-dir", type=str, default="output")
-    parser.add_argument("--steps", type=int, default=50)
 
     args = parser.parse_args()
 
@@ -113,7 +126,7 @@ if __name__ == "__main__":
     print("args.host", args.host)
     print("args.port", args.port)
     ld = LlavaDirect(args.model_path)
-    sd = StableDiffusionDirect(args.sd_host, args.sd_port, args.steps)
+    sd = StableDiffusionDirect(args.sd_host, args.sd_port)
 
     image_dir = args.image_dir
     uvicorn.run(app, host=args.host, port=args.port, log_level="info")
