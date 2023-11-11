@@ -50,7 +50,7 @@ class LlavaDirect:
         max_new_tokens=512,
         load_8bit=True,
         load_4bit=False,
-        debug=False,
+        debug=True,
     ):
         # Model
         disable_torch_init()
@@ -124,15 +124,21 @@ class LlavaDirect:
         output = output.replace("The image features ", "").replace("</s>", "")
         return output
 
-    def load_image(self, image_file):
+    # def load_image(self, image_file):
+    #     if image_file.startswith("http://") or image_file.startswith("https://"):
+    #         response = requests.get(image_file)
+    #         image = Image.open(BytesIO(response.content)).convert("RGB")
+    #     else:
+    #         image = Image.open(image_file).convert("RGB")
+    #     return image
+
+    def process_image(self, image_file: str, prompt: str) -> str:
         if image_file.startswith("http://") or image_file.startswith("https://"):
             response = requests.get(image_file)
             image = Image.open(BytesIO(response.content)).convert("RGB")
         else:
             image = Image.open(image_file).convert("RGB")
-        return image
 
-    def process_image(self, image, inp):
         # Similar operation in model_worker.py
         image_tensor = process_images([image], self.image_processor, self.model.config)
         if type(image_tensor) is list:
@@ -147,16 +153,16 @@ class LlavaDirect:
         if image is not None:
             # first message
             if self.model.config.mm_use_im_start_end:
-                inp = (
+                prompt = (
                     DEFAULT_IM_START_TOKEN
                     + DEFAULT_IMAGE_TOKEN
                     + DEFAULT_IM_END_TOKEN
                     + "\n"
-                    + inp
+                    + prompt
                 )
             else:
-                inp = DEFAULT_IMAGE_TOKEN + "\n" + inp
-            self.conv.append_message(self.conv.roles[0], inp)
+                prompt = DEFAULT_IMAGE_TOKEN + "\n" + prompt
+            self.conv.append_message(self.conv.roles[0], prompt)
             image = None
 
         self.conv.append_message(self.conv.roles[1], None)
