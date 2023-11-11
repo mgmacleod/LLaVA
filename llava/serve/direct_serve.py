@@ -11,8 +11,8 @@ import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.responses import Response
 
-from llava.serve.direct_ret2i import StableDiffusionDirect
 from llava.serve.llava_direct import LlavaDirect
+from llava.serve.sd_direct import StableDiffusionDirect
 
 
 def run_experiment(
