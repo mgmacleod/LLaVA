@@ -97,6 +97,9 @@ class LlavaDirect:
             device=device,
         )
 
+        self.reset_conversation()
+
+    def reset_conversation(self):
         if "llama-2" in self.model_name.lower():
             self.conv_mode = "llava_llama_2"
         elif "v1" in self.model_name.lower():
@@ -124,15 +127,15 @@ class LlavaDirect:
         output = output.replace("The image features ", "").replace("</s>", "")
         return output
 
-    def load_image(self, image_file):
+    def process_image(self, image_file: str, prompt: str) -> str:
         if image_file.startswith("http://") or image_file.startswith("https://"):
             response = requests.get(image_file)
             image = Image.open(BytesIO(response.content)).convert("RGB")
         else:
             image = Image.open(image_file).convert("RGB")
-        return image
 
-    def process_image(self, image, inp):
+        self.reset_conversation()
+
         # Similar operation in model_worker.py
         image_tensor = process_images([image], self.image_processor, self.model.config)
         if type(image_tensor) is list:
@@ -147,16 +150,16 @@ class LlavaDirect:
         if image is not None:
             # first message
             if self.model.config.mm_use_im_start_end:
-                inp = (
+                prompt = (
                     DEFAULT_IM_START_TOKEN
                     + DEFAULT_IMAGE_TOKEN
                     + DEFAULT_IM_END_TOKEN
                     + "\n"
-                    + inp
+                    + prompt
                 )
             else:
-                inp = DEFAULT_IMAGE_TOKEN + "\n" + inp
-            self.conv.append_message(self.conv.roles[0], inp)
+                prompt = DEFAULT_IMAGE_TOKEN + "\n" + prompt
+            self.conv.append_message(self.conv.roles[0], prompt)
             image = None
 
         self.conv.append_message(self.conv.roles[1], None)
@@ -200,4 +203,6 @@ class LlavaDirect:
         if self.debug:
             print("\n", {"prompt": prompt, "outputs": outputs}, "\n")
 
+        # process output and remove leading string "The image features " and remode trailing string "</s>"
+        outputs = outputs.replace("The image features ", "").replace("</s>", "")
         return outputs
